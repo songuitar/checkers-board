@@ -20,7 +20,6 @@ export class AppComponent {
   readonly blackFigure = 1;
   readonly whiteFigure = 2;
 
-
   isBlackCell(rowIndex: number, cellIndex: number): boolean {
     const offset = rowIndex % 2 === 0 ? 0 : 1;
     return (cellIndex + offset) % 2 !== 0
