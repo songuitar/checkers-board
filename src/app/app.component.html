@@ -4,6 +4,7 @@
       *ngFor="let cell of row; let cellIndex = index"
       class="cell"
       [class.cell-black]="isBlackCell(rowIndex, cellIndex)">
+      <div *ngIf="cell > 0" class="figure" [class.figure-black]="cell === blackFigure"></div>
     </div>
   </div>
 </div>

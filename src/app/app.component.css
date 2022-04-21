@@ -11,15 +11,18 @@
 .cell {
   min-height: 75px;
   width: 75px;
+  display: flex;
 }
 .cell-black {
   background-color: black;
 }
 .figure {
-  width: 100%;
-  height: 100%;
-  margin: 5px;
+  width: 50%;
+  height: 50%;
+  margin: auto auto;
   border-radius: 75px;
+  align-items: center;
+  justify-content: center;
   background-color: #d0d0d0;
 }
 .figure-black {
