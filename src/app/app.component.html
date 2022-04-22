@@ -1,4 +1,4 @@
-<div class="board">
+<div class="board" *ngIf="boardState$ | async as boardState">
   <div class="row" *ngFor="let row of boardState;  let rowIndex = index">
     <div
       *ngFor="let cell of row; let cellIndex = index"
