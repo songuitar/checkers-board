@@ -51,6 +51,7 @@ export class AppComponent implements OnInit {
     this.boardState$ = timer(0, 1000).pipe(
       switchMapTo(this.http.get<{ board: Number[][] }>('http://localhost:3000')),
       map((res) => res.board),
+      distinctUntilChanged(((previous, current) => JSON.stringify(previous) === JSON.stringify(current))),
       switchMap(state => {
         if (!this.isStateValid(state)) {
           this.validationError$.next('board state is not valid')
