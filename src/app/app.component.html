@@ -1,4 +1,4 @@
-<div class="board" *ngIf="boardState$ | async as boardState">
+<div class="board" *ngIf="boardState$ | async as boardState" [class.board-invalid]="!!(validationError$ | async)">
   <div class="row" *ngFor="let row of boardState;  let rowIndex = index">
     <div
       *ngFor="let cell of row; let cellIndex = index"
@@ -7,9 +7,10 @@
       <div *ngIf="cell > 0" class="figure" [class.figure-black]="cell === Figure.black"></div>
     </div>
   </div>
+  <div class="board-alert" *ngIf="validationError$ | async as validationError">
+    {{
+    validationError
+    }}
+  </div>
 </div>
-<div class="board-alert" *ngIf="validationError$ | async as validationError">
-  {{
-  validationError
-  }}
-</div>
+

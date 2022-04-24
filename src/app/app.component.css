@@ -3,6 +3,7 @@
   min-height: 600px;
   margin: 50px auto 0;
 }
+
 .row {
   min-height: 75px;
   width: 100%;
@@ -29,5 +30,9 @@
   background-color: #305472;
 }
 .board-alert {
+  margin: 5px;
   color: #c50101;
+}
+.board-invalid {
+  border: 1px solid #c50101;
 }
