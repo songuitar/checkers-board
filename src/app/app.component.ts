@@ -40,6 +40,11 @@ export class AppComponent implements OnInit {
       distinctUntilChanged(((previous, current) => JSON.stringify(previous) === JSON.stringify(current))),
       pairwise(),
       switchMap(([prev, curr]) => {
+
+        this.boardService.scanDiagonal(curr, (d, value) => {
+          console.log({d, value})
+        })
+
         if (!this.boardService.isStateValid(curr)) {
           this.validationError$.next('board state is not valid')
           return of(curr)

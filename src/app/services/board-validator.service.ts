@@ -25,7 +25,7 @@ export class BoardValidatorService {
         !this.isBlackCell(rowIndex, cellIndex) && cell !== Figure.empty).length > 0).length === 0
   }
 
-  isMoveValid(prevState: Number[][], currState: Number[][]): boolean {
+  isMoveValid(prevState: number[][], currState: number[][]): boolean {
     /**
      * TODO: Проверка на то что пешка была срублена - сканировать доску диагоналями на предмет паттерна x-y-0
      * TODO: и при проверке следующего хода проверять что сумма диагонали уменьшилась
@@ -34,7 +34,24 @@ export class BoardValidatorService {
     return prevSum === 0 || prevSum >= this.stateSum(currState);
   }
 
-  stateSum(state: Number[][]): number {
+  isNecessaryCapturePerformed(prevState: number[][], currState: number[][]): boolean {
+
+    return true;
+  }
+
+  scanDiagonal(state: number[][], callback: (d: number, value: number) => void): void {
+    for (let d = 0; d <= 10; d=d+2) {
+      let y = d < 5 ? 5 - d : 0;
+      let x = d < 5 ? 0 : d - 5;
+      while (state[y] !== undefined && state[y][x] !== undefined) {
+        callback(d, state[y][x])
+        x++;
+        y++
+      }
+    }
+  }
+
+  stateSum(state: number[][]): number {
     // @ts-ignore
     return state.flat().reduce((b, a) => b + a, 0);
   }
