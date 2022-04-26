@@ -1,4 +1,4 @@
-# ChessBoard
+# CheckersBoard
 
 ## Development server
 
