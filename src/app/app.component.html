@@ -3,7 +3,7 @@
     <div
       *ngFor="let cell of row; let cellIndex = index"
       class="cell"
-      [class.cell-black]="isBlackCell(rowIndex, cellIndex)">
+      [class.cell-black]="boardService.isBlackCell(rowIndex, cellIndex)">
       <div *ngIf="cell > 0" class="figure" [class.figure-black]="cell === Figure.black"></div>
     </div>
   </div>
