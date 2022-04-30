@@ -33,7 +33,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.boardState$ = timer(0, 3000).pipe(
+    this.boardState$ = timer(0, 10000).pipe(
       switchMapTo(this.http.get<{ board: number[][] }>('http://localhost:3000')),
       map((res) => res.board),
       startWith([[]]),
@@ -41,9 +41,7 @@ export class AppComponent implements OnInit {
       pairwise(),
       switchMap(([prev, curr]) => {
 
-        this.boardService.scanDiagonal(curr, (d, value) => {
-          console.log({d, value})
-        })
+        console.log(this.boardService.scanDiagonal(curr));
 
         if (!this.boardService.isStateValid(curr)) {
           this.validationError$.next('board state is not valid')
@@ -52,6 +50,11 @@ export class AppComponent implements OnInit {
 
         if (!this.boardService.isMoveValid(prev, curr)) {
           this.validationError$.next('last move is not valid')
+          return of(curr)
+        }
+
+        if (!this.boardService.isNecessaryCapturePerformed(prev, curr)) {
+          this.validationError$.next('obligatory capture was not performed');
           return of(curr)
         }
 

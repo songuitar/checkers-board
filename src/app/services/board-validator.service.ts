@@ -1,11 +1,17 @@
 import {Injectable} from '@angular/core';
+import {Observable} from "rxjs";
 
 export enum Figure {
   empty = 0,
   black = 1,
-  white = 2
+  white = 2,
+  blackKing = 10,
+  whiteKing = 20,
 }
 
+export interface DiagonalItem {
+  d: number, value: number
+}
 
 @Injectable({
   providedIn: 'root'
@@ -26,29 +32,71 @@ export class BoardValidatorService {
   }
 
   isMoveValid(prevState: number[][], currState: number[][]): boolean {
-    /**
-     * TODO: Проверка на то что пешка была срублена - сканировать доску диагоналями на предмет паттерна x-y-0
-     * TODO: и при проверке следующего хода проверять что сумма диагонали уменьшилась
-     */
     const prevSum = this.stateSum(prevState)
     return prevSum === 0 || prevSum >= this.stateSum(currState);
   }
 
   isNecessaryCapturePerformed(prevState: number[][], currState: number[][]): boolean {
+    let prevDiagonals = this.scanDiagonal(prevState);
 
-    return true;
+    let diagonalWithPotentialCapture: {d: number, sum: number}|null = null;
+    Object.values(prevDiagonals).forEach(
+      (diagonal) => {
+       diagonal.forEach(((value, index, array) => {
+         if (array[index - 2] === undefined) {
+           return
+         }
+         const pattern = [array[index - 2].value, array[index - 1].value, array[index].value]
+
+         if (pattern.filter(figure => figure !== Figure.empty).length !== 2) {
+           return
+         }
+         if ((pattern[0] !== pattern[1] && pattern[2] === Figure.empty) || (pattern[1] !== pattern[2] && pattern[0] === Figure.empty)) {
+           diagonalWithPotentialCapture = {d: value.d, sum: this.diagonalSum(diagonal)}
+         }
+       }))
+      }
+    )
+    if (diagonalWithPotentialCapture === null) {
+      return true;
+    }
+    let isCapturePerformed = false;
+    let currDiagonals = this.scanDiagonal(currState);
+
+    Object.values(currDiagonals).forEach(
+      (diagonal) => {
+        if (diagonal[0].d !== diagonalWithPotentialCapture?.d) {
+          return
+        }
+        if (this.diagonalSum(diagonal) < diagonalWithPotentialCapture?.sum) {
+          isCapturePerformed = true
+        }
+      }
+    )
+
+    return isCapturePerformed;
   }
 
-  scanDiagonal(state: number[][], callback: (d: number, value: number) => void): void {
-    for (let d = 0; d <= 10; d=d+2) {
-      let y = d < 5 ? 5 - d : 0;
-      let x = d < 5 ? 0 : d - 5;
+  diagonalSum(diagonal: DiagonalItem[]): number {
+    return diagonal.map(({value}) => value).reduce((b, a) => b + a, 0)
+  }
+
+  scanDiagonal(state: number[][]) {
+    const diagonalTable: { [d: string]: DiagonalItem[] } = {}
+    for (let d = 0; d <= 10; d = d + 2) {
+      let y = d < 5 ? 5 - d : 0
+      let x = d < 5 ? 0 : d - 5
       while (state[y] !== undefined && state[y][x] !== undefined) {
-        callback(d, state[y][x])
-        x++;
+        if (diagonalTable[d] === undefined) {
+          diagonalTable[d] = []
+          continue
+        }
+        diagonalTable[d].push({d, value: state[y][x]})
+        x++
         y++
       }
     }
+    return diagonalTable
   }
 
   stateSum(state: number[][]): number {
