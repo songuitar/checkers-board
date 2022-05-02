@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Observable} from "rxjs";
+
 
 export enum Figure {
   empty = 0,
@@ -10,7 +10,8 @@ export enum Figure {
 }
 
 export interface DiagonalItem {
-  d: number, value: number
+  d: number,
+  value: number
 }
 
 @Injectable({
@@ -19,6 +20,23 @@ export interface DiagonalItem {
 export class BoardValidatorService {
 
   readonly fullBoardFigureAmount = 24;
+
+  private _currentPlayer: Figure = Figure.white;
+
+  boardInitialState = [
+    [0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0, 1, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 0, 2, 0, 2, 0, 2, 0],
+    [0, 2, 0, 2, 0, 2, 0, 2],
+    [2, 0, 2, 0, 2, 0, 2, 0]
+  ]
+
+  setCurrentPlayer(value: Figure) {
+    this._currentPlayer = value;
+  }
 
   isBlackCell(rowIndex: number, cellIndex: number): boolean {
     const offset = rowIndex % 2 === 0 ? 0 : 1;
@@ -36,28 +54,33 @@ export class BoardValidatorService {
     return prevSum === 0 || prevSum >= this.stateSum(currState);
   }
 
+
+  isPositionChangedForPlayer(prevState: number[][], currState: number[][]): boolean {
+    return this.statePrint(prevState) !== this.statePrint(currState);
+  }
+
   isNecessaryCapturePerformed(prevState: number[][], currState: number[][]): boolean {
     let prevDiagonals = this.scanDiagonal(prevState);
 
-    let diagonalWithPotentialCapture: {d: number, sum: number}|null = null;
+    let subjectDiagonals: { d: number, sum: number }[] = [];
     Object.values(prevDiagonals).forEach(
       (diagonal) => {
-       diagonal.forEach(((value, index, array) => {
-         if (array[index - 2] === undefined) {
-           return
-         }
-         const pattern = [array[index - 2].value, array[index - 1].value, array[index].value]
+        diagonal.forEach(((value, index, array) => {
+          if (array[index - 2] === undefined) {
+            return
+          }
+          const pattern = [array[index - 2].value, array[index - 1].value, array[index].value]
 
-         if (pattern.filter(figure => figure !== Figure.empty).length !== 2) {
-           return
-         }
-         if ((pattern[0] !== pattern[1] && pattern[2] === Figure.empty) || (pattern[1] !== pattern[2] && pattern[0] === Figure.empty)) {
-           diagonalWithPotentialCapture = {d: value.d, sum: this.diagonalSum(diagonal)}
-         }
-       }))
+          if (pattern.filter(figure => figure !== Figure.empty).length !== 2) {
+            return
+          }
+          if ((pattern[0] !== pattern[1] && pattern[2] === Figure.empty) || (pattern[1] !== pattern[2] && pattern[0] === Figure.empty)) {
+            subjectDiagonals.push({d: value.d, sum: this.diagonalSum(diagonal)})
+          }
+        }))
       }
     )
-    if (diagonalWithPotentialCapture === null) {
+    if (subjectDiagonals.length === 0) {
       return true;
     }
     let isCapturePerformed = false;
@@ -65,10 +88,11 @@ export class BoardValidatorService {
 
     Object.values(currDiagonals).forEach(
       (diagonal) => {
-        if (diagonal[0].d !== diagonalWithPotentialCapture?.d) {
+        const subjectDiagonal = subjectDiagonals.filter(value => value.d === diagonal[0].d).shift()
+        if (subjectDiagonal === undefined) {
           return
         }
-        if (this.diagonalSum(diagonal) < diagonalWithPotentialCapture?.sum) {
+        if (this.diagonalSum(diagonal) < subjectDiagonal.sum) {
           isCapturePerformed = true
         }
       }
@@ -102,6 +126,17 @@ export class BoardValidatorService {
   stateSum(state: number[][]): number {
     // @ts-ignore
     return state.flat().reduce((b, a) => b + a, 0);
+  }
+
+  statePrint(state: number[][]): string {
+    return state.flat()
+      .map((elem) => elem === this._currentPlayer || elem === Number(String(this._currentPlayer) + '0') ? elem : Figure.empty)
+      .map((_, index) => index)
+      .join('.')
+  }
+
+  getOpponent(player: Figure): Figure {
+    return Number(!Figure)
   }
 
   private equalizeFigureValues(state: number[][]): number[][] {
