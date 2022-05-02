@@ -56,7 +56,7 @@ export class BoardValidatorService {
 
 
   isPositionChangedForPlayer(prevState: number[][], currState: number[][]): boolean {
-    return this.statePrint(prevState) !== this.statePrint(currState);
+    return this.statePrintForPlayer(prevState) !== this.statePrintForPlayer(currState);
   }
 
   isNecessaryCapturePerformed(prevState: number[][], currState: number[][]): boolean {
@@ -123,6 +123,18 @@ export class BoardValidatorService {
     return diagonalTable
   }
 
+  changedIndexes(prev: number[][], curr: number[][]) {
+    const prevIndexMap = this.statePrint(prev).split('.');
+    const currIndexMap = this.statePrint(curr).split('.');
+    const changedIndexes: {hIndex: number, vIndex: number, value: number}[] = []
+    prevIndexMap.forEach(((value, index) => {
+      if (value !== currIndexMap[index]) {
+        changedIndexes.push({hIndex:((index - index % 8) / 8), vIndex:index % 8, value: Number(value)})
+      }
+    }))
+    return changedIndexes;
+  }
+
   stateSum(state: number[][]): number {
     // @ts-ignore
     return state.flat().reduce((b, a) => b + a, 0);
@@ -130,8 +142,14 @@ export class BoardValidatorService {
 
   statePrint(state: number[][]): string {
     return state.flat()
+      .map((elem, index) => elem !== 0 ? index : 0)
+      .join('.')
+  }
+
+  statePrintForPlayer(state: number[][]): string {
+    return state.flat()
       .map((elem) => elem === this._currentPlayer || elem === Number(String(this._currentPlayer) + '0') ? elem : Figure.empty)
-      .map((_, index) => index)
+      .map((elem, index) => elem !== 0 ? index : 0)
       .join('.')
   }
 

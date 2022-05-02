@@ -13,4 +13,9 @@
     }}
   </div>
 </div>
+<div class="board-changelog" *ngIf="changeLog$ | async as changeLog">
+  <div class="move-snapshot" *ngFor="let snapshot of changeLog">
+    {{ moveSnapshotPrint(snapshot.prev, snapshot.curr) }}
+  </div>
+</div>
 

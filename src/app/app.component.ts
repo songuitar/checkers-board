@@ -2,21 +2,23 @@ import {Component, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {
   BehaviorSubject,
-  distinctUntilChanged,
+  distinctUntilChanged, map,
   Observable,
   of,
   pairwise,
   startWith,
   switchMap,
-  switchMapTo,
+  switchMapTo, tap,
   timer,
 } from "rxjs";
 import {BoardValidatorService, Figure} from './services/board-validator.service';
 
 export interface BoardState {
   board: number[][]
-  currentPlayer: Figure.black | Figure.white
+  currentPlayer: Figure
 }
+
+export interface MoveSnapshot { prev: number[][], curr: number[][] }
 
 @Component({
   selector: 'app-root',
@@ -28,6 +30,10 @@ export class AppComponent implements OnInit {
   // @ts-ignore
   boardState$: Observable<number[][]>
   validationError$ = new BehaviorSubject<string | null>(null);
+
+  changeLog$ = new BehaviorSubject<MoveSnapshot[]>([]);
+  // @ts-ignore
+  changedRowsLog$: Observable<MoveSnapshot>
 
   readonly Figure = Figure;
 
@@ -81,7 +87,28 @@ export class AppComponent implements OnInit {
         return of(curr)
       }),
     )
+
+    this.changedRowsLog$ = this.boardState$.pipe(
+      pairwise(),
+      map(([prev, curr]) => {
+        return {
+          prev, curr
+        }
+      }),
+      tap(state => {
+        let newValue = [...this.changeLog$.value, state]
+        newValue = newValue.slice((newValue.length > 5 ? newValue.length - 5 : 0), newValue.length);
+        this.changeLog$.next(newValue)
+      }),
+    )
+
+    this.changedRowsLog$.subscribe()
   }
 
+  moveSnapshotPrint(prev: number[][], curr:number[][]): string {
+    //TODO: put it in main pipe and use it to paint affected cells
+
+    return JSON.stringify(this.boardService.changedIndexes(prev, curr))
+  }
 
 }
