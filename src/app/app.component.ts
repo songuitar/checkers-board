@@ -2,16 +2,19 @@ import {Component, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {
   BehaviorSubject,
-  distinctUntilChanged, interval, map,
+  distinctUntilChanged,
+  interval,
+  map,
   Observable,
   of,
-  pairwise, shareReplay,
-  startWith, Subject,
+  pairwise,
+  shareReplay,
   switchMap,
-  switchMapTo, tap,
-  timer,
+  switchMapTo,
+  tap,
 } from "rxjs";
 import {BoardValidatorService, Figure} from './services/board-validator.service';
+import {CellSelectorService} from "./services/cell-selector.service";
 
 export interface BoardState {
   board: number[][]
@@ -22,6 +25,8 @@ export interface MoveSnapshot {
   prev: number[][],
   curr: number[][]
 }
+
+
 
 @Component({
   selector: 'app-root',
@@ -41,6 +46,8 @@ export class AppComponent implements OnInit {
   // @ts-ignore
   changedRowsLog$: Observable<MoveSnapshot>
 
+
+
   private boardStateSubject$ = new BehaviorSubject<BoardState>(
     {board: this.boardService.boardInitialState, currentPlayer: null}
   );
@@ -49,13 +56,19 @@ export class AppComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    public boardService: BoardValidatorService
+    public boardService: BoardValidatorService,
+    public cellSelector: CellSelectorService
   ) {
+  }
+
+  onCellSelect(x: number, y: number, figure: Figure): void {
+    this.cellSelector.selectCell(x, y, figure)
   }
 
   ngOnInit(): void {
     interval(2000).pipe(
-      switchMapTo(this.http.get<BoardState>('http://localhost:3000/example-seq')),
+      // switchMapTo(this.http.get<BoardState>('http://localhost:3000/example-seq')),
+      switchMapTo(this.http.get<BoardState>('http://localhost:3000')),
       distinctUntilChanged(((previous, current) => JSON.stringify(previous) === JSON.stringify(current))),
     )
       .subscribe(value => {

@@ -1,1 +1,46 @@
-/* You can add global styles to this file, and also import other style files */
+.board {
+  width: 600px;
+  min-height: 600px;
+  margin: 50px auto 0;
+}
+
+.row {
+  min-height: 75px;
+  width: 100%;
+  display: flex;
+}
+.cell {
+  min-height: 75px;
+  width: 75px;
+  display: flex;
+}
+.cell-black {
+  background-color: black;
+}
+.cell-black:hover {
+  outline: 2px solid #c70808;
+  cursor: pointer;
+}
+.cell-black.selected {
+  outline: 2px solid #c75108;
+}
+
+.figure {
+  width: 37.5px;
+  height: 37.5px;
+  margin: auto auto;
+  border-radius: 75px;
+  align-items: center;
+  justify-content: center;
+  background-color: #9ba8a8;
+}
+.figure-black {
+  background-color: #305472;
+}
+.board-alert {
+  margin: 5px;
+  color: #c50101;
+}
+.board-invalid {
+  border: 1px solid #c50101;
+}

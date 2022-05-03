@@ -1,11 +1,13 @@
 <div class="board" *ngIf="boardState$ | async as boardState" [class.board-invalid]="!!(validationError$ | async)">
   <div class="row" *ngFor="let row of boardState;  let rowIndex = index">
-    <div
+    <app-cell
       *ngFor="let cell of row; let cellIndex = index"
-      class="cell"
-      [class.cell-black]="boardService.isBlackCell(rowIndex, cellIndex)">
-      <div *ngIf="cell > 0" class="figure" [class.figure-black]="cell === Figure.black"></div>
-    </div>
+      [isBlack]="boardService.isBlackCell(rowIndex, cellIndex)"
+      [figure]="cell"
+      [selected]="cellSelector.isSelected(cellIndex, rowIndex) | async"
+      (onSelect)="onCellSelect(cellIndex, rowIndex, cell)"
+    >
+    </app-cell>
   </div>
   <div class="board-alert" *ngIf="validationError$ | async as validationError">
     {{

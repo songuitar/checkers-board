@@ -3,10 +3,12 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 import {HttpClientModule} from "@angular/common/http";
+import { CellComponent } from './components/cell/cell.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    CellComponent
   ],
   imports: [
     HttpClientModule,

@@ -1,0 +1,4 @@
+<div class="cell" [class.cell-black]="isBlack" [class.selected]="selected" (click)="onClick()">
+  <div *ngIf="figure !== Figure.empty" class="figure" [class.figure-black]="figure === Figure.black"></div>
+</div>
+
