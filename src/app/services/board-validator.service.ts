@@ -21,8 +21,6 @@ export class BoardValidatorService {
 
   readonly fullBoardFigureAmount = 24;
 
-  private _currentPlayer: Figure = Figure.white;
-
   boardInitialState = [
     [0, 1, 0, 1, 0, 1, 0, 1],
     [1, 0, 1, 0, 1, 0, 1, 0],
@@ -34,9 +32,6 @@ export class BoardValidatorService {
     [2, 0, 2, 0, 2, 0, 2, 0]
   ]
 
-  setCurrentPlayer(value: Figure) {
-    this._currentPlayer = value;
-  }
 
   isBlackCell(rowIndex: number, cellIndex: number): boolean {
     const offset = rowIndex % 2 === 0 ? 0 : 1;
@@ -44,19 +39,17 @@ export class BoardValidatorService {
   }
 
   isStateValid(state: number[][]): boolean {
-    return this.stateSum(this.equalizeFigureValues(state)) <= this.fullBoardFigureAmount && state.filter((row, rowIndex) =>
+    return this.stateSum(state.map(row => row.map(cell => cell > 0 ? 1 : 0))) <= this.fullBoardFigureAmount && state.filter((row, rowIndex) =>
       row.filter((cell, cellIndex) =>
         !this.isBlackCell(rowIndex, cellIndex) && cell !== Figure.empty).length > 0).length === 0
   }
 
-  isMoveValid(prevState: number[][], currState: number[][]): boolean {
-    const prevSum = this.stateSum(prevState)
-    return prevSum === 0 || prevSum >= this.stateSum(currState);
+  isBoardSumDecreasing(prevState: number[][], currState: number[][]): boolean {
+    return this.stateSum(prevState) >= this.stateSum(currState);
   }
 
-
-  isPositionChangedForPlayer(prevState: number[][], currState: number[][]): boolean {
-    return this.statePrintForPlayer(prevState) !== this.statePrintForPlayer(currState);
+  isPositionChangedForPlayer(prevState: number[][], currState: number[][], player: Figure): boolean {
+    return this.statePrintForPlayer(prevState, player) !== this.statePrintForPlayer(currState, player);
   }
 
   isNecessaryCapturePerformed(prevState: number[][], currState: number[][]): boolean {
@@ -126,7 +119,9 @@ export class BoardValidatorService {
   changedIndexes(prev: number[][], curr: number[][]) {
     const prevIndexMap = this.statePrint(prev).split('.');
     const currIndexMap = this.statePrint(curr).split('.');
+
     const changedIndexes: {hIndex: number, vIndex: number, value: number}[] = []
+
     prevIndexMap.forEach(((value, index) => {
       if (value !== currIndexMap[index]) {
         changedIndexes.push({hIndex:((index - index % 8) / 8), vIndex:index % 8, value: Number(value)})
@@ -140,24 +135,25 @@ export class BoardValidatorService {
     return state.flat().reduce((b, a) => b + a, 0);
   }
 
+  stateSumForPlayer(state: number[][], player: Figure): number {
+    // @ts-ignore
+    return state.flat()
+      .map((elem) => elem === player || elem === Figure.empty ? elem : Figure.empty)
+      .reduce((b, a) => b + a, 0);
+  }
+
   statePrint(state: number[][]): string {
     return state.flat()
       .map((elem, index) => elem !== 0 ? index : 0)
       .join('.')
   }
 
-  statePrintForPlayer(state: number[][]): string {
-    return state.flat()
-      .map((elem) => elem === this._currentPlayer || elem === Number(String(this._currentPlayer) + '0') ? elem : Figure.empty)
+  statePrintForPlayer(state: number[][], player: Figure): string {
+    const res = state.flat()
+      .map((elem) => elem === player || elem === Number(String(player) + '0') ? elem : Figure.empty)
       .map((elem, index) => elem !== 0 ? index : 0)
       .join('.')
-  }
-
-  getOpponent(player: Figure): Figure {
-    return Number(!Figure)
-  }
-
-  private equalizeFigureValues(state: number[][]): number[][] {
-    return state.map(row => row.map(cell => cell > 0 ? 1 : 0))
+   // console.log(res)
+    return res;
   }
 }
