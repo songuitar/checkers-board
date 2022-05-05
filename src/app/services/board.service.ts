@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
 import {SelectedCell} from "./cell-selector.service";
+import {BehaviorSubject} from "rxjs";
 
 
 export enum Figure {
@@ -38,12 +39,17 @@ export class BoardService {
     [2, 0, 2, 0, 2, 0, 2, 0]
   ]
 
+  public lastError$ = new BehaviorSubject<string| null>(null)
 
-  moveFigures(state: number[][], from: SelectedCell, to: SelectedCell): number[][] {
+
+  moveFigures(state: number[][], from: SelectedCell, to: SelectedCell, executeCapture: boolean = true): number[][] {
     return state.map((row, rowIndex) => row.map((cell, cellIndex) => {
       if (rowIndex === from.y && cellIndex === from.x) {
         return Figure.empty
       }
+/*      if (executeCapture && rowIndex === from.y) {
+
+      }*/
       if (rowIndex === to.y && cellIndex === to.x) {
         return from.figure
       }
@@ -52,11 +58,14 @@ export class BoardService {
   }
 
   validateMove(from: SelectedCell, to: SelectedCell): boolean {
+    this.lastError$.next(null)
+
     const moveDir = this.getFigureType(from.figure) === FigureType.black ? 1 : -1;
     const XDiff = (from.x - to.x) * moveDir;
     const YDiff = (from.y - to.y) * moveDir;
 
     if (Math.abs(XDiff / YDiff) !== 1) {
+      this.lastError$.next('non-diagonal move')
       return false
     }
 
