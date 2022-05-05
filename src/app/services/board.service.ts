@@ -130,14 +130,18 @@ export class BoardService {
   }
 
   changedIndexes(prev: number[][], curr: number[][]) {
-    const prevIndexMap = this.statePrint(prev).split('.');
-    const currIndexMap = this.statePrint(curr).split('.');
+    const prevIndexMap = prev.flat()
+    const currIndexMap = curr.flat()
 
-    const changedIndexes: {hIndex: number, vIndex: number, value: number}[] = []
+    const changedIndexes: {x: number, y: number, value: number}[] = []
 
     prevIndexMap.forEach(((value, index) => {
       if (value !== currIndexMap[index]) {
-        changedIndexes.push({hIndex:((index - index % 8) / 8), vIndex:index % 8, value: Number(value)})
+        changedIndexes.push({
+          x:index % 8,
+          y:((index - index % 8) / 8),
+          value
+        })
       }
     }))
     return changedIndexes;
@@ -162,11 +166,9 @@ export class BoardService {
   }
 
   statePrintForPlayer(state: number[][], player: Figure): string {
-    const res = state.flat()
+    return state.flat()
       .map((elem) => elem === player || elem === Number(String(player) + '0') ? elem : Figure.empty)
       .map((elem, index) => elem !== 0 ? index : 0)
       .join('.')
-   // console.log(res)
-    return res;
   }
 }

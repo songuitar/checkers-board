@@ -6,6 +6,10 @@
       [figure]="cell"
       [selected]="cellSelector.isSelected(cellIndex, rowIndex) | async"
       (onSelect)="onCellSelect(cellIndex, rowIndex, cell)"
+      (dragstart)="onDragEvent(cellIndex, rowIndex, cell, 'dragstart')"
+      (drop)="onDragEvent(cellIndex, rowIndex, cell, 'drop')"
+      (dragover)="$event.preventDefault()"
+      draggable="true"
     >
     </app-cell>
   </div>

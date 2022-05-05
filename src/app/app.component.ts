@@ -2,9 +2,10 @@ import {Component, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {
   BehaviorSubject,
-  distinctUntilChanged, filter,
+  distinctUntilChanged,
+  filter,
   interval,
-  map, merge,
+  map,
   Observable,
   of,
   pairwise,
@@ -26,6 +27,8 @@ export interface MoveSnapshot {
   curr: number[][]
 }
 
+type playerMode = 'manual' | 'bot'
+
 
 @Component({
   selector: 'app-root',
@@ -45,10 +48,15 @@ export class AppComponent implements OnInit {
   // @ts-ignore
   changedRowsLog$: Observable<MoveSnapshot>
 
-
   private boardStateSubject$ = new BehaviorSubject<BoardState>(
     {board: this.boardService.boardInitialState, currentPlayer: null}
   );
+
+
+  readonly playersModeSettings: {black: playerMode, white: playerMode }= {
+    black: 'manual',
+    white: 'manual'
+  }
 
   readonly Figure = Figure;
 
@@ -61,6 +69,14 @@ export class AppComponent implements OnInit {
 
   onCellSelect(x: number, y: number, figure: Figure): void {
     this.cellSelector.selectCell(x, y, figure)
+  }
+
+  onDragEvent(x: number, y: number, figure: Figure, event: string): void {
+    console.log({x,y,figure, event})
+    this.cellSelector.selectCell(x, y, figure)
+  }
+  allowDrop(event: DragEvent): void {
+    event.preventDefault()
   }
 
   ngOnInit(): void {
@@ -76,6 +92,10 @@ export class AppComponent implements OnInit {
 
     this.cellSelector.getSelection().pipe(
       filter(() => this.cellSelector.isFull()),
+      filter(selection => {
+        const player = selection?.from.figure === Figure.black ? 'black' : 'white'
+        return this.playersModeSettings[player] === 'manual'
+      }),
       map(selection => {
         return {
           board: this.boardService.moveFigures(
@@ -148,10 +168,27 @@ export class AppComponent implements OnInit {
     this.changedRowsLog$.subscribe()
   }
 
+  positionToConventionalFormat(x: number, y: number): string {
+    return 'abcdefgh'.toUpperCase()[x] + String('87654321')[y]
+  }
+
   moveSnapshotPrint(prev: number[][], curr: number[][]): string {
     //TODO: put it in main pipe and use it to paint affected cells
 
-    return JSON.stringify(this.boardService.changedIndexes(prev, curr))
+    const isKing = (figure: Figure) => {
+      return figure / 10 >= 1
+    }
+
+    return this.boardService.changedIndexes(prev, curr)
+      .map(value => ({...value, pos: this.positionToConventionalFormat(value.x, value.y)}))
+      .sort(value => value.value !== Figure.empty ? -1 : 1)
+      .map(value => {
+        const isTarget = value.value === Figure.empty;
+        const isBlack = (value.value === Figure.black || value.value / 10 === Figure.black)
+
+        return (!isTarget ? (isBlack ? 'Black' : 'White') : '') + ' ' + value.pos + (isKing(value.value) ? '(King)' : '') + (!isTarget ? ' -> ' : '')
+      })
+      .join('')
   }
 
 }
