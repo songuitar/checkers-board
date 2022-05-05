@@ -2,9 +2,9 @@ import {Component, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {
   BehaviorSubject,
-  distinctUntilChanged,
+  distinctUntilChanged, filter,
   interval,
-  map,
+  map, merge,
   Observable,
   of,
   pairwise,
@@ -13,7 +13,7 @@ import {
   switchMapTo,
   tap,
 } from "rxjs";
-import {BoardValidatorService, Figure} from './services/board-validator.service';
+import {BoardService, Figure} from './services/board.service';
 import {CellSelectorService} from "./services/cell-selector.service";
 
 export interface BoardState {
@@ -25,7 +25,6 @@ export interface MoveSnapshot {
   prev: number[][],
   curr: number[][]
 }
-
 
 
 @Component({
@@ -47,7 +46,6 @@ export class AppComponent implements OnInit {
   changedRowsLog$: Observable<MoveSnapshot>
 
 
-
   private boardStateSubject$ = new BehaviorSubject<BoardState>(
     {board: this.boardService.boardInitialState, currentPlayer: null}
   );
@@ -56,7 +54,7 @@ export class AppComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    public boardService: BoardValidatorService,
+    public boardService: BoardService,
     public cellSelector: CellSelectorService
   ) {
   }
@@ -72,8 +70,25 @@ export class AppComponent implements OnInit {
       distinctUntilChanged(((previous, current) => JSON.stringify(previous) === JSON.stringify(current))),
     )
       .subscribe(value => {
-        this.boardStateSubject$.next(value)
+        // this.boardStateSubject$.next(value)
       })
+
+
+    this.cellSelector.getSelection().pipe(
+      filter(() => this.cellSelector.isFull()),
+      map(selection => {
+        return {
+          board: this.boardService.moveFigures(
+            // @ts-ignore
+            this.boardStateSubject$.value.board, selection.from, selection.to
+          ),
+          // @ts-ignore
+          currentPlayer: selection.from.figure
+        }
+      }),
+      tap(value => this.boardStateSubject$.next(value))
+    ).subscribe()
+
 
     this.boardState$ = this.boardStateSubject$.asObservable().pipe(
       map(value => value.board)
@@ -82,7 +97,7 @@ export class AppComponent implements OnInit {
     this.validationError$ = this.boardStateSubject$.asObservable().pipe(
       pairwise(),
       switchMap(([prevState, currState]) => {
-        //console.log('switchMap', new Date(), currState.currentPlayer)
+        console.log('switchMap', new Date(), prevState.currentPlayer, currState.currentPlayer)
 
         const prev = prevState.board
         const curr = currState.board
@@ -109,7 +124,7 @@ export class AppComponent implements OnInit {
         if (!this.boardService.isNecessaryCapturePerformed(prev, curr)) {
           return of('obligatory capture was not performed')
         }
-
+        //TODO: check move coordinates to validate move - check if x and y are equally affected and with which sign
         return of(null)
       }),
       shareReplay(2)
@@ -122,6 +137,7 @@ export class AppComponent implements OnInit {
           prev, curr
         }
       }),
+
       tap(state => {
         let newValue = [...this.changeLog$.value, state]
         newValue = newValue.slice((newValue.length > 5 ? newValue.length - 5 : 0), newValue.length);

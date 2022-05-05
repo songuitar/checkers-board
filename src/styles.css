@@ -22,7 +22,7 @@
   cursor: pointer;
 }
 .cell-black.selected {
-  outline: 2px solid #c75108;
+  outline: 2px solid #001fff;
 }
 
 .figure {

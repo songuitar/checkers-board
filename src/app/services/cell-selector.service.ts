@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import {BehaviorSubject, map, Observable} from "rxjs";
-import {Figure} from "./board-validator.service";
+import {Figure} from "./board.service";
 
-interface Selection {
+export interface SelectionValue {
   from: SelectedCell
   to?: SelectedCell
 }
 
-interface SelectedCell {
+export interface SelectedCell {
   x: number,
   y: number,
   figure: Figure
@@ -18,12 +18,11 @@ interface SelectedCell {
 })
 export class CellSelectorService {
 
-  private selection$ = new BehaviorSubject<Selection | null>(null);
+  private selection$ = new BehaviorSubject<SelectionValue | null>(null);
 
   selectCell(x: number, y: number, figure: Figure): void {
     if (this.isFull()) {
       this.flush()
-      return;
     }
 
     const cell: SelectedCell = {x, y, figure}
@@ -66,7 +65,7 @@ export class CellSelectorService {
     this.selection$.next(null)
   }
 
-  getSelection(): Observable<Selection | null> {
+  getSelection(): Observable<SelectionValue | null> {
     return this.selection$.asObservable()
   }
 }

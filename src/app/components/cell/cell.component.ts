@@ -1,6 +1,6 @@
-import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
-import {Figure} from "../../services/board-validator.service";
-import {CellSelectorService} from "../../services/cell-selector.service";
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Figure} from "../../services/board.service";
+
 
 @Component({
   selector: 'app-cell',
@@ -12,19 +12,11 @@ export class CellComponent {
   @Input() figure: Figure = Figure.empty
   @Input() selected: boolean| null = false
 
- // @Input() y: number;
-  //@Input() x: number;
-
   @Output() onSelect = new EventEmitter<{figure: Figure}>()
 
   Figure = Figure;
 
-/*  constructor(public cellSelector: CellSelectorService) {
-  }*/
-
   onClick(): void {
-    console.log(this.figure)
-
     if (!this.isBlack) {
       return
     }

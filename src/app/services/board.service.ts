@@ -1,4 +1,5 @@
 import {Injectable} from '@angular/core';
+import {SelectedCell} from "./cell-selector.service";
 
 
 export enum Figure {
@@ -17,7 +18,7 @@ export interface DiagonalItem {
 @Injectable({
   providedIn: 'root'
 })
-export class BoardValidatorService {
+export class BoardService {
 
   readonly fullBoardFigureAmount = 24;
 
@@ -32,6 +33,18 @@ export class BoardValidatorService {
     [2, 0, 2, 0, 2, 0, 2, 0]
   ]
 
+
+  moveFigures(state: number[][], from: SelectedCell, to: SelectedCell): number[][] {
+    return state.map((row, rowIndex) => row.map((cell, cellIndex) => {
+      if (rowIndex === from.y && cellIndex === from.x) {
+        return Figure.empty
+      }
+      if (rowIndex === to.y && cellIndex === to.x) {
+        return from.figure
+      }
+      return cell
+    }))
+  }
 
   isBlackCell(rowIndex: number, cellIndex: number): boolean {
     const offset = rowIndex % 2 === 0 ? 0 : 1;
