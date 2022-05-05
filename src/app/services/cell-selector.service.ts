@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {BehaviorSubject, map, Observable} from "rxjs";
-import {Figure} from "./board.service";
+import {BoardService, Figure} from "./board.service";
 
 export interface SelectionValue {
   from: SelectedCell
@@ -18,7 +18,11 @@ export interface SelectedCell {
 })
 export class CellSelectorService {
 
+  public triggerValidation: boolean = false;
   private selection$ = new BehaviorSubject<SelectionValue | null>(null);
+
+  constructor(private boardService: BoardService) {
+  }
 
   selectCell(x: number, y: number, figure: Figure): void {
     if (this.isFull()) {
@@ -40,7 +44,17 @@ export class CellSelectorService {
       })
       return;
     }
-    this.selection$.next({...selection, to:cell})
+
+    selection = {...selection, to:cell}
+
+    if (this.triggerValidation) {
+      // @ts-ignore
+      if (!this.boardService.validateMove(selection.from, selection.to)) {
+        return;
+      }
+    }
+
+    this.selection$.next(selection)
   }
 
   isFull(): boolean {

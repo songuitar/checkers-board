@@ -80,6 +80,9 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+
+    this.cellSelector.triggerValidation = true;
+
     interval(2000).pipe(
       // switchMapTo(this.http.get<BoardState>('http://localhost:3000/example-seq')),
       switchMapTo(this.http.get<BoardState>('http://localhost:3000')),
@@ -96,6 +99,8 @@ export class AppComponent implements OnInit {
         const player = selection?.from.figure === Figure.black ? 'black' : 'white'
         return this.playersModeSettings[player] === 'manual'
       }),
+      // @ts-ignore
+      filter(selection => this.boardService.validateMove(selection.from, selection.to)),
       map(selection => {
         return {
           board: this.boardService.moveFigures(
@@ -117,7 +122,6 @@ export class AppComponent implements OnInit {
     this.validationError$ = this.boardStateSubject$.asObservable().pipe(
       pairwise(),
       switchMap(([prevState, currState]) => {
-        console.log('switchMap', new Date(), prevState.currentPlayer, currState.currentPlayer)
 
         const prev = prevState.board
         const curr = currState.board

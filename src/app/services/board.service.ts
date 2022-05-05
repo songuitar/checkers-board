@@ -10,6 +10,11 @@ export enum Figure {
   whiteKing = 20,
 }
 
+export enum FigureType {
+  black = 1,
+  white = 2,
+}
+
 export interface DiagonalItem {
   d: number,
   value: number
@@ -44,6 +49,18 @@ export class BoardService {
       }
       return cell
     }))
+  }
+
+  validateMove(from: SelectedCell, to: SelectedCell): boolean {
+    const moveDir = this.getFigureType(from.figure) === FigureType.black ? 1 : -1;
+    const XDiff = (from.x - to.x) * moveDir;
+    const YDiff = (from.y - to.y) * moveDir;
+
+    if (Math.abs(XDiff / YDiff) !== 1) {
+      return false
+    }
+
+    return true
   }
 
   isBlackCell(rowIndex: number, cellIndex: number): boolean {
@@ -152,13 +169,6 @@ export class BoardService {
     return state.flat().reduce((b, a) => b + a, 0);
   }
 
-  stateSumForPlayer(state: number[][], player: Figure): number {
-    // @ts-ignore
-    return state.flat()
-      .map((elem) => elem === player || elem === Figure.empty ? elem : Figure.empty)
-      .reduce((b, a) => b + a, 0);
-  }
-
   statePrint(state: number[][]): string {
     return state.flat()
       .map((elem, index) => elem !== 0 ? index : 0)
@@ -170,5 +180,12 @@ export class BoardService {
       .map((elem) => elem === player || elem === Number(String(player) + '0') ? elem : Figure.empty)
       .map((elem, index) => elem !== 0 ? index : 0)
       .join('.')
+  }
+
+  getFigureType(figure: Figure): FigureType {
+    if (figure === Figure.empty) {
+      throw 'Cannot determine type of an empty figure'
+    }
+    return (figure === Figure.black || figure / 10 === Figure.black) ? FigureType.black : FigureType.white;
   }
 }

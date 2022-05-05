@@ -1,27 +1,28 @@
-<div class="board" *ngIf="boardState$ | async as boardState" [class.board-invalid]="!!(validationError$ | async)">
-  <div class="row" *ngFor="let row of boardState;  let rowIndex = index">
-    <app-cell
-      *ngFor="let cell of row; let cellIndex = index"
-      [isBlack]="boardService.isBlackCell(rowIndex, cellIndex)"
-      [figure]="cell"
-      [selected]="cellSelector.isSelected(cellIndex, rowIndex) | async"
-      (onSelect)="onCellSelect(cellIndex, rowIndex, cell)"
-      (dragstart)="onDragEvent(cellIndex, rowIndex, cell, 'dragstart')"
-      (drop)="onDragEvent(cellIndex, rowIndex, cell, 'drop')"
-      (dragover)="$event.preventDefault()"
-      draggable="true"
-    >
-    </app-cell>
+<div class="container">
+  <div class="board" *ngIf="boardState$ | async as boardState" [class.board-invalid]="!!(validationError$ | async)">
+    <div class="row" *ngFor="let row of boardState;  let rowIndex = index">
+      <app-cell
+        *ngFor="let cell of row; let cellIndex = index"
+        [isBlack]="boardService.isBlackCell(rowIndex, cellIndex)"
+        [figure]="cell"
+        [selected]="cellSelector.isSelected(cellIndex, rowIndex) | async"
+        (onSelect)="onCellSelect(cellIndex, rowIndex, cell)"
+        (dragstart)="onDragEvent(cellIndex, rowIndex, cell, 'dragstart')"
+        (drop)="onDragEvent(cellIndex, rowIndex, cell, 'drop')"
+        (dragover)="$event.preventDefault()"
+        draggable="true"
+      >
+      </app-cell>
+    </div>
+    <div class="board-alert" *ngIf="validationError$ | async as validationError">
+      {{
+      validationError
+      }}
+    </div>
   </div>
-  <div class="board-alert" *ngIf="validationError$ | async as validationError">
-    {{
-    validationError
-    }}
+  <div class="board-changelog" *ngIf="changeLog$ | async as changeLog">
+    <div class="move-snapshot" *ngFor="let snapshot of changeLog">
+      {{ moveSnapshotPrint(snapshot.prev, snapshot.curr) }}
+    </div>
   </div>
 </div>
-<div class="board-changelog" *ngIf="changeLog$ | async as changeLog">
-  <div class="move-snapshot" *ngFor="let snapshot of changeLog">
-    {{ moveSnapshotPrint(snapshot.prev, snapshot.curr) }}
-  </div>
-</div>
-
