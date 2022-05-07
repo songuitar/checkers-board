@@ -13,11 +13,13 @@ export class CellComponent {
   @Input() selected: boolean| null = false
 
   @Output() onSelect = new EventEmitter<{figure: Figure}>()
+  @Output() onWhiteSelect = new EventEmitter<void>()
 
   Figure = Figure;
 
   onClick(): void {
     if (!this.isBlack) {
+      this.onWhiteSelect.emit()
       return
     }
     this.onSelect.emit({figure:this.figure})

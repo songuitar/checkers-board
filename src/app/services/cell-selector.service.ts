@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {BehaviorSubject, map, Observable} from "rxjs";
 import {BoardService, Figure} from "./board.service";
 

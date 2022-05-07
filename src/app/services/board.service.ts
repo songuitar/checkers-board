@@ -21,6 +21,15 @@ export interface DiagonalItem {
   value: number
 }
 
+const polyDirectRange = function* (from = 0, to = 0) {
+  const sign = Math.abs(to - from) / (to - from);
+  if (sign === 1) {
+    for (let i = from; i <= to; yield i++) {}
+  } else {
+    for (let i = from; i >= to; yield i--) {}
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -37,21 +46,32 @@ export class BoardService {
     [2, 0, 2, 0, 2, 0, 2, 0],
     [0, 2, 0, 2, 0, 2, 0, 2],
     [2, 0, 2, 0, 2, 0, 2, 0]
+/*    [0, 1, 0, 1, 0, 1, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 0, 2, 0, 2, 0, 2, 0]*/
   ]
 
   public lastError$ = new BehaviorSubject<string| null>(null)
 
 
-  moveFigures(state: number[][], from: SelectedCell, to: SelectedCell, executeCapture: boolean = true): number[][] {
+  moveFigures(state: number[][], from: SelectedCell, to: SelectedCell): number[][] {
+    const xRange = [...polyDirectRange(from.x, to.x)]
+    const yRange = [...polyDirectRange(from.y, to.y)]
+
     return state.map((row, rowIndex) => row.map((cell, cellIndex) => {
       if (rowIndex === from.y && cellIndex === from.x) {
         return Figure.empty
       }
-/*      if (executeCapture && rowIndex === from.y) {
-
-      }*/
       if (rowIndex === to.y && cellIndex === to.x) {
         return from.figure
+      }
+      if (xRange.includes(cellIndex) && yRange.includes(rowIndex) && this.getFigureType(cell) !== this.getFigureType(from.figure)) {
+        return Figure.empty
       }
       return cell
     }))
@@ -75,6 +95,14 @@ export class BoardService {
   isBlackCell(rowIndex: number, cellIndex: number): boolean {
     const offset = rowIndex % 2 === 0 ? 0 : 1;
     return (cellIndex + offset) % 2 !== 0
+  }
+
+  isBlackFigure(value: Figure): boolean {
+    return value === Figure.black || value / 10 === Figure.black
+  }
+
+  isKing(figure: Figure): boolean {
+    return figure / 10 >= 1
   }
 
   isStateValid(state: number[][]): boolean {
@@ -191,9 +219,9 @@ export class BoardService {
       .join('.')
   }
 
-  getFigureType(figure: Figure): FigureType {
+  getFigureType(figure: Figure): FigureType | null {
     if (figure === Figure.empty) {
-      throw 'Cannot determine type of an empty figure'
+      return null
     }
     return (figure === Figure.black || figure / 10 === Figure.black) ? FigureType.black : FigureType.white;
   }

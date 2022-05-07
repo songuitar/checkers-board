@@ -7,8 +7,9 @@
         [figure]="cell"
         [selected]="cellSelector.isSelected(cellIndex, rowIndex) | async"
         (onSelect)="onCellSelect(cellIndex, rowIndex, cell)"
-        (dragstart)="onDragEvent(cellIndex, rowIndex, cell, 'dragstart')"
-        (drop)="onDragEvent(cellIndex, rowIndex, cell, 'drop')"
+        (onWhiteSelect)="onWhiteSelect()"
+        (dragstart)="onDragEvent(cellIndex, rowIndex, cell)"
+        (drop)="onDragEvent(cellIndex, rowIndex, cell)"
         (dragover)="$event.preventDefault()"
         draggable="true"
       >
@@ -20,7 +21,7 @@
       }}
     </div>
   </div>
-  <div class="board-changelog" *ngIf="changeLog$ | async as changeLog">
+  <div class="board-changelog" *ngIf="changedRowsLogSpan$ | async as changeLog">
     <div class="move-snapshot" *ngFor="let snapshot of changeLog">
       {{ moveSnapshotPrint(snapshot.prev, snapshot.curr) }}
     </div>

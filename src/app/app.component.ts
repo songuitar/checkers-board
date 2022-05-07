@@ -14,7 +14,7 @@ import {
   switchMapTo,
   tap,
 } from "rxjs";
-import {BoardService, Figure} from './services/board.service';
+import {BoardService, Figure, FigureType} from './services/board.service';
 import {CellSelectorService} from "./services/cell-selector.service";
 
 export interface BoardState {
@@ -24,7 +24,8 @@ export interface BoardState {
 
 export interface MoveSnapshot {
   prev: number[][],
-  curr: number[][]
+  curr: number[][],
+  error?: string
 }
 
 type playerMode = 'manual' | 'bot'
@@ -46,14 +47,14 @@ export class AppComponent implements OnInit {
 
   changeLog$ = new BehaviorSubject<MoveSnapshot[]>([]);
   // @ts-ignore
-  changedRowsLog$: Observable<MoveSnapshot>
+  changedRowsLogSpan$: Observable<MoveSnapshot[]>
 
   private boardStateSubject$ = new BehaviorSubject<BoardState>(
     {board: this.boardService.boardInitialState, currentPlayer: null}
   );
 
 
-  readonly playersModeSettings: {black: playerMode, white: playerMode }= {
+  readonly playersModeSettings: { black: playerMode, white: playerMode } = {
     black: 'manual',
     white: 'manual'
   }
@@ -71,16 +72,16 @@ export class AppComponent implements OnInit {
     this.cellSelector.selectCell(x, y, figure)
   }
 
-  onDragEvent(x: number, y: number, figure: Figure, event: string): void {
-    console.log({x,y,figure, event})
+  onDragEvent(x: number, y: number, figure: Figure): void {
     this.cellSelector.selectCell(x, y, figure)
   }
-  allowDrop(event: DragEvent): void {
-    event.preventDefault()
+
+  onWhiteSelect(): void {
+    this.cellSelector.flush()
   }
 
   ngOnInit(): void {
-
+    //TODO: nest js server with shared modules and validation
     this.cellSelector.triggerValidation = true;
 
     interval(2000).pipe(
@@ -96,7 +97,8 @@ export class AppComponent implements OnInit {
     this.cellSelector.getSelection().pipe(
       filter(() => this.cellSelector.isFull()),
       filter(selection => {
-        const player = selection?.from.figure === Figure.black ? 'black' : 'white'
+        // @ts-ignore
+        const player = this.boardService.getFigureType(selection?.from.figure) === FigureType.black ? 'black' : 'white'
         return this.playersModeSettings[player] === 'manual'
       }),
       // @ts-ignore
@@ -122,7 +124,6 @@ export class AppComponent implements OnInit {
     this.validationError$ = this.boardStateSubject$.asObservable().pipe(
       pairwise(),
       switchMap(([prevState, currState]) => {
-
         const prev = prevState.board
         const curr = currState.board
 
@@ -148,28 +149,23 @@ export class AppComponent implements OnInit {
         if (!this.boardService.isNecessaryCapturePerformed(prev, curr)) {
           return of('obligatory capture was not performed')
         }
-        //TODO: check move coordinates to validate move - check if x and y are equally affected and with which sign
         return of(null)
       }),
       shareReplay(2)
     )
 
-    this.changedRowsLog$ = this.boardState$.pipe(
+    this.changedRowsLogSpan$ = this.boardState$.pipe(
       pairwise(),
-      map(([prev, curr]) => {
-        return {
-          prev, curr
-        }
-      }),
-
+      map(([prev, curr]) => ({prev, curr})),
       tap(state => {
         let newValue = [...this.changeLog$.value, state]
-        newValue = newValue.slice((newValue.length > 5 ? newValue.length - 5 : 0), newValue.length);
         this.changeLog$.next(newValue)
       }),
+      map(() => {
+        const value = this.changeLog$.value;
+        return this.changeLog$.value.slice((value.length > 5 ? value.length - 5 : 0), value.length);
+      })
     )
-
-    this.changedRowsLog$.subscribe()
   }
 
   positionToConventionalFormat(x: number, y: number): string {
@@ -177,20 +173,16 @@ export class AppComponent implements OnInit {
   }
 
   moveSnapshotPrint(prev: number[][], curr: number[][]): string {
-    //TODO: put it in main pipe and use it to paint affected cells
-
-    const isKing = (figure: Figure) => {
-      return figure / 10 >= 1
-    }
-
     return this.boardService.changedIndexes(prev, curr)
       .map(value => ({...value, pos: this.positionToConventionalFormat(value.x, value.y)}))
       .sort(value => value.value !== Figure.empty ? -1 : 1)
       .map(value => {
         const isTarget = value.value === Figure.empty;
-        const isBlack = (value.value === Figure.black || value.value / 10 === Figure.black)
+        const isBlack = this.boardService.isBlackFigure(value.value)
+        const isKing = this.boardService.isKing(value.value)
 
-        return (!isTarget ? (isBlack ? 'Black' : 'White') : '') + ' ' + value.pos + (isKing(value.value) ? '(King)' : '') + (!isTarget ? ' -> ' : '')
+        return (!isTarget ? (isBlack ? 'Black' : 'White') : '') +
+          ' ' + value.pos + (isKing ? '(King)' : '') + (!isTarget ? ' -> ' : '')
       })
       .join('')
   }
